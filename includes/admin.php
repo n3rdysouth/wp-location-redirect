@@ -7,23 +7,23 @@ function wp_location_redirect_add_main_menu() {
         'WP Location Redirect',
         'Location Redirect',
         'manage_options',
-        'wp-location-redirect',
+        'location-redirect-wp',
         'wp_location_redirect_settings_page',
         'dashicons-location',
         80
     );
 
     add_submenu_page(
-        'wp-location-redirect',
+        'location-redirect-wp',
         'Location Redirect Settings',
         'Settings',
         'manage_options',
-        'wp-location-redirect',
+        'location-redirect-wp',
         'wp_location_redirect_settings_page'
     );
 
     add_submenu_page(
-        'wp-location-redirect',
+        'location-redirect-wp',
         'Manage Locations',
         'Manage Locations',
         'manage_options',
@@ -90,7 +90,7 @@ function wp_location_redirect_upload_geoip() {
         $file_type = wp_check_filetype( $file_name );
 
         if ( $file_type['ext'] !== 'mmdb' ) {
-            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+            wp_redirect( admin_url( 'admin.php?page=location-redirect-wp&geoip_error=true' ) );
             exit;
         }
 
@@ -98,7 +98,7 @@ function wp_location_redirect_upload_geoip() {
 
         // Initialize the WP Filesystem API
         if ( ! WP_Filesystem() ) {
-            wp_die( esc_html__( 'Failed to initialize WP_Filesystem', 'wp-location-redirect' ) );
+            wp_die( esc_html__( 'Failed to initialize WP_Filesystem', 'location-redirect-wp' ) );
         }
 
         $upload_dir = WP_LOCATION_REDIRECT_DIR . 'data/';
@@ -109,15 +109,15 @@ function wp_location_redirect_upload_geoip() {
         $destination = trailingslashit( $upload_dir ) . 'GeoLite2-City.mmdb';
 
         if ( ! $wp_filesystem->move( $uploaded_file['tmp_name'], $destination, true ) ) {
-            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+            wp_redirect( admin_url( 'admin.php?page=location-redirect-wp&geoip_error=true' ) );
             exit;
         }
 
-        wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_uploaded=true' ) );
+        wp_redirect( admin_url( 'admin.php?page=location-redirect-wp&geoip_uploaded=true' ) );
         exit;
     }
 
-    wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+    wp_redirect( admin_url( 'admin.php?page=location-redirect-wp&geoip_error=true' ) );
     exit;
 }
 
@@ -153,7 +153,7 @@ function wp_location_redirect_manage_locations_page() {
         if ( wp_verify_nonce( $_GET['_wpnonce'], 'delete_location_' . $id ) ) {
             wp_location_redirect_delete_location( $id );
         } else {
-            wp_die( esc_html__( 'Nonce verification failed.', 'wp-location-redirect' ) );
+            wp_die( esc_html__( 'Nonce verification failed.', 'location-redirect-wp' ) );
         }
     }
 

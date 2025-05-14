@@ -1,6 +1,6 @@
 <?php return array(
     'root' => array(
-        'name' => 'nerdysouth/wp-location-redirect',
+        'name' => 'nerdysouth/location-redirect-wp',
         'pretty_version' => '1.0.0',
         'version' => '1.0.0.0',
         'reference' => null,
@@ -46,7 +46,7 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'nerdysouth/wp-location-redirect' => array(
+        'nerdysouth/location-redirect-wp' => array(
             'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
             'reference' => null,

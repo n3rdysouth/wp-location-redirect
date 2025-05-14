@@ -1,5 +1,5 @@
 {
-  "name": "nerdysouth/wp-location-redirect",
+  "name": "nerdysouth/location-redirect-wp",
   "type": "wordpress-plugin",
   "version": "1.0.0",
   "description": "A WordPress plugin to redirect users based on their location using the GeoLite2-City database.",

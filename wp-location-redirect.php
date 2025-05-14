@@ -10,7 +10,7 @@ Author: Brandon DuBois
 Author URI: https://www.nerdysouthinc.com
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: wp-location-redirect
+Text Domain: location-redirect-wp
 Tags: location, redirect, geolocation, GeoLite2, MaxMind
 */
 
