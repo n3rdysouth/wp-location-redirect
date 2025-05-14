@@ -98,7 +98,7 @@ function wp_location_redirect_upload_geoip() {
 
         // Initialize the WP Filesystem API
         if ( ! WP_Filesystem() ) {
-            wp_die( esc_html__( 'Failed to initialize WP_Filesystem', 'text-domain' ) );
+            wp_die( esc_html__( 'Failed to initialize WP_Filesystem', 'wp-location-redirect' ) );
         }
 
         $upload_dir = WP_LOCATION_REDIRECT_DIR . 'data/';
@@ -153,7 +153,7 @@ function wp_location_redirect_manage_locations_page() {
         if ( wp_verify_nonce( $_GET['_wpnonce'], 'delete_location_' . $id ) ) {
             wp_location_redirect_delete_location( $id );
         } else {
-            wp_die( esc_html__( 'Nonce verification failed.', 'text-domain' ) );
+            wp_die( esc_html__( 'Nonce verification failed.', 'wp-location-redirect' ) );
         }
     }
 
