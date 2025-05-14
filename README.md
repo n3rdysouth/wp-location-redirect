@@ -2,10 +2,11 @@
 WP Location Redirect is a powerful WordPress plugin that enables you to redirect users to a specific URL based on their geographical location. Whether it's by country, state/region, or city, this plugin utilizes the GeoIP2-City database to accurately determine where your visitors are coming from.
 
 ## Configuration
-After installing this plugin, you will be prompted to download the latest version of the GeoIP2-City database. For an easier download, we rely on getting this file from https://cdn.jsdelivr.net/npm/geolite2-city/GeoLite2-City.mmdb.gz
+I have included a copy of a recent GeoIP2-City database. There is a button to download the latest version of the GeoIP2-City database in order to keep this up to date. For an easier download, we rely on getting this file from https://cdn.jsdelivr.net/npm/geolite2-city/GeoLite2-City.mmdb.gz
 
 ## Added Functions
 This plugin adds the following functions that you can use in your PHP code:
+
 ### Save New Redirect Rule
 ```php
 wp_location_redirect_save_rule( array(
