@@ -1,0 +1,22 @@
+{
+  "name": "nerdysouth/wp-location-redirect",
+  "type": "wordpress-plugin",
+  "version": "1.0.0",
+  "description": "A WordPress plugin to redirect users based on their location using the GeoLite2-City database.",
+  "require": {
+    "php": ">=7.0",
+    "geoip2/geoip2": "^2.12"
+  },
+  "autoload": {
+    "psr-4": {
+      "WP_Location_Redirect\\": "includes/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Brandon DuBois",
+      "email": "brandon@ecommercedr.com"
+    }
+  ],
+  "license": "GPL-2.0-or-later"
+}
