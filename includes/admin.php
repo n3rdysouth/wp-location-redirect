@@ -3,44 +3,38 @@
 // Add main menu and submenus
 add_action( 'admin_menu', 'wp_location_redirect_add_main_menu' );
 function wp_location_redirect_add_main_menu() {
-    // Add main menu (parent)
     add_menu_page(
-        'WP Location Redirect',       // Page title
-        'Location Redirect',          // Menu title
-        'manage_options',             // Capability
-        'wp-location-redirect',       // Menu slug
-        'wp_location_redirect_settings_page', // Callback for main menu (redirects to Settings)
-        'dashicons-location',         // Icon
-        80                            // Position
+        'WP Location Redirect',
+        'Location Redirect',
+        'manage_options',
+        'wp-location-redirect',
+        'wp_location_redirect_settings_page',
+        'dashicons-location',
+        80
     );
 
-    // Add submenu for Settings
     add_submenu_page(
-        'wp-location-redirect',       // Parent slug
-        'Location Redirect Settings', // Page title
-        'Settings',                   // Submenu title
-        'manage_options',             // Capability
-        'wp-location-redirect',       // Menu slug (same as main menu for focusing settings)
-        'wp_location_redirect_settings_page' // Callback for Settings page
+        'wp-location-redirect',
+        'Location Redirect Settings',
+        'Settings',
+        'manage_options',
+        'wp-location-redirect',
+        'wp_location_redirect_settings_page'
     );
 
-    // Add submenu for managing locations
     add_submenu_page(
-        'wp-location-redirect',       // Parent slug
-        'Manage Locations',           // Page title
-        'Manage Locations',           // Submenu title
-        'manage_options',             // Capability
-        'manage-locations',           // Menu slug
-        'wp_location_redirect_manage_locations_page' // Callback for Manage Locations page
+        'wp-location-redirect',
+        'Manage Locations',
+        'Manage Locations',
+        'manage_options',
+        'manage-locations',
+        'wp_location_redirect_manage_locations_page'
     );
 }
 
-// Settings page HTML
+// SETTINGS PAGE
 function wp_location_redirect_settings_page() {
-    // File path for the GeoLite2 database
     $geoip_file = WP_LOCATION_REDIRECT_DIR . 'data/GeoLite2-City.mmdb';
-
-    // Display last update time
     $last_updated = file_exists( $geoip_file )
         ? date( "F d, Y H:i:s", filemtime( $geoip_file ) )
         : '<span style="color: red;">Never</span>';
@@ -48,37 +42,77 @@ function wp_location_redirect_settings_page() {
     ?>
     <div class="wrap">
         <h1>WP Location Redirect Settings</h1>
-        <p><?php echo esc_html( $geoip_file ); ?></p>
-        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-            <?php wp_nonce_field( 'wp_location_geoip_download', '_wpnonce_geoip' ); ?>
-            <h2>GeoLite2 Database</h2>
-            <p>Last Updated: <strong><?php echo $last_updated; ?></strong></p>
-            <input type="hidden" name="action" value="download_geoip">
-            <button type="submit" name="download_geoip" class="button button-primary">
-                Download GeoLite2 Database
-            </button>
+
+        <!-- MMDB File Upload Section -->
+        <h2>Upload GeoLite2-City.mmdb File</h2>
+        <p>If you have a GeoLite2-City `.mmdb` file, please upload it here. We recommend obtaining it directly from <a href="https://www.maxmind.com/" target="_blank">MaxMind</a>.</p>
+        <p>Last Updated: <strong><?php echo $last_updated; ?></strong></p>
+
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
+            <?php wp_nonce_field( 'wp_location_geoip_upload', '_wpnonce_geoip_upload' ); ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="geoip_file">GeoLite2-City.mmdb file:</label></th>
+                    <td><input type="file" name="geoip_file" id="geoip_file" accept=".mmdb" required></td>
+                </tr>
+            </table>
+            <p><input type="hidden" name="action" value="upload_geoip">
+                <button type="submit" class="button button-primary">Upload File</button>
+            </p>
         </form>
-        <?php if ( isset( $_GET['geoip_downloaded'] ) && $_GET['geoip_downloaded'] === 'true' ) : ?>
+
+        <?php if ( isset( $_GET['geoip_uploaded'] ) && $_GET['geoip_uploaded'] === 'true' ) : ?>
             <div class="notice notice-success is-dismissible">
-                <p>GeoLite2 database downloaded and updated successfully!</p>
+                <p>The GeoLite2 database file was successfully uploaded!</p>
+            </div>
+        <?php elseif ( isset( $_GET['geoip_error'] ) && $_GET['geoip_error'] === 'true' ) : ?>
+            <div class="notice notice-error is-dismissible">
+                <p>Failed to upload the GeoLite2 database file. Please ensure it is a valid `.mmdb` file and try again.</p>
             </div>
         <?php endif; ?>
     </div>
     <?php
 }
 
-// Handle GeoLite2 database download
-add_action( 'admin_post_download_geoip', 'wp_location_redirect_download_geoip' );
-function wp_location_redirect_download_geoip() {
-    if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'wp_location_geoip_download', '_wpnonce_geoip' ) ) {
+// HANDLE GEOIP FILE UPLOAD
+add_action( 'admin_post_upload_geoip', 'wp_location_redirect_upload_geoip' );
+function wp_location_redirect_upload_geoip() {
+    if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'wp_location_geoip_upload', '_wpnonce_geoip_upload' ) ) {
         wp_die( 'Unauthorized!', 'Error', array( 'response' => 401 ) );
     }
 
-    // Example download logic
-    // ...
+    $upload_dir = WP_LOCATION_REDIRECT_DIR . 'data/';
+
+    // Check if a file was uploaded
+    if ( isset( $_FILES['geoip_file'] ) && ! empty( $_FILES['geoip_file']['tmp_name'] ) ) {
+        // Validate file type
+        $file_type = wp_check_filetype( $_FILES['geoip_file']['name'] );
+        if ( $file_type['ext'] !== 'mmdb' ) {
+            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+            exit();
+        }
+
+        // Make sure the data directory exists
+        if ( ! is_dir( $upload_dir ) ) {
+            wp_mkdir_p( $upload_dir );
+        }
+
+        // Move the file to the data directory
+        $destination = $upload_dir . 'GeoLite2-City.mmdb';
+        if ( move_uploaded_file( $_FILES['geoip_file']['tmp_name'], $destination ) ) {
+            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_uploaded=true' ) );
+        } else {
+            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+        }
+    } else {
+        // No file uploaded or invalid
+        wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+    }
+
+    exit();
 }
 
-// Manage Locations Page
+// MANAGE LOCATIONS PAGE
 function wp_location_redirect_manage_locations_page() {
     global $wpdb;
     require_once __DIR__ . '/database.php';
@@ -181,3 +215,4 @@ function wp_location_redirect_manage_locations_page() {
     </div>
     <?php
 }
+?>

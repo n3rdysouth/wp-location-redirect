@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: WP Location Redirect
-Description: Redirect users based on their location, such as country, state, city, and zip codes by using the GeoLite2-City database.
+Description: Redirect users based on their location, such as country, state, city by using the GeoLite2-City database.
 Version: 1.0.0
-Author: Your Name
+Author: Brandon DuBois
 */
 
 if ( ! defined( 'ABSPATH' ) ) {
