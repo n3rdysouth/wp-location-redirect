@@ -77,9 +77,22 @@ function wp_location_redirect_create_location( $data ) {
 function wp_location_redirect_get_locations() {
     global $wpdb;
 
+    // Caching result to avoid repeated database queries
+    $cache_key = 'wp_location_redirect_get_locations';
+    $cached_result = wp_cache_get( $cache_key, 'location_redirects' );
+
+    if ( false !== $cached_result ) {
+        return $cached_result; // Return cached result if available
+    }
+
     // Query to fetch all records from the table
     $table_name = wp_location_redirect_get_table_name();
-    return $wpdb->get_results( "SELECT * FROM $table_name ORDER BY id ASC" );
+    $result = $wpdb->get_results( "SELECT * FROM $table_name ORDER BY id ASC" );
+
+    // Cache the result
+    wp_cache_set( $cache_key, $result, 'location_redirects' );
+
+    return $result;
 }
 
 /**
@@ -92,11 +105,24 @@ function wp_location_redirect_get_locations() {
 function wp_location_redirect_get_rule_by_id( $id ) {
     global $wpdb;
 
+    // Caching result for individual rules
+    $cache_key = 'wp_location_redirect_rule_' . $id;
+    $cached_result = wp_cache_get( $cache_key, 'location_redirects' );
+
+    if ( false !== $cached_result ) {
+        return $cached_result; // Return cached result if available
+    }
+
     // Query to fetch the rule by ID
     $table_name = wp_location_redirect_get_table_name();
-    return $wpdb->get_row(
+    $result = $wpdb->get_row(
         $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", intval( $id ) )
     );
+
+    // Cache the result
+    wp_cache_set( $cache_key, $result, 'location_redirects' );
+
+    return $result;
 }
 
 /**
@@ -118,7 +144,7 @@ function wp_location_redirect_update_rule( $id, $data ) {
 
     // Update the record in the table
     $table_name = wp_location_redirect_get_table_name();
-    return $wpdb->update(
+    $updated = $wpdb->update(
             $table_name,
             array(
                 'country' => sanitize_text_field( $data['country'] ),
@@ -130,6 +156,14 @@ function wp_location_redirect_update_rule( $id, $data ) {
             array( '%s', '%s', '%s', '%s' ), // Data format
             array( '%d' ) // WHERE format
         ) !== false;
+
+    // Clear cache for this specific rule and all rules
+    if ( $updated ) {
+        wp_cache_delete( 'wp_location_redirect_rule_' . $id, 'location_redirects' );
+        wp_cache_delete( 'wp_location_redirect_get_locations', 'location_redirects' );
+    }
+
+    return $updated;
 }
 
 /**
@@ -144,5 +178,13 @@ function wp_location_redirect_delete_location( $id ) {
 
     // Delete the record
     $table_name = wp_location_redirect_get_table_name();
-    return $wpdb->delete( $table_name, array( 'id' => intval( $id ) ), array( '%d' ) ) !== false;
+    $deleted = $wpdb->delete( $table_name, array( 'id' => intval( $id ) ), array( '%d' ) ) !== false;
+
+    // Clear cache for this specific rule and all rules
+    if ( $deleted ) {
+        wp_cache_delete( 'wp_location_redirect_rule_' . $id, 'location_redirects' );
+        wp_cache_delete( 'wp_location_redirect_get_locations', 'location_redirects' );
+    }
+
+    return $deleted;
 }

@@ -13,13 +13,21 @@ add_action( 'template_redirect', 'wp_location_redirect_check_user_location' );
  * @return string The client's IP address.
  */
 function get_client_ip() {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-        $ip_list = explode( ',', $_SERVER['HTTP_X_FORWARDED_FOR'] );
-        $ip = trim( $ip_list[0] ); // Get the first IP in the list
+    $ip = '';
+
+    // Verify and sanitize each superglobal key/value before usage
+    if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+        $ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
     }
+
+    if ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+        $ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
+    } elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+        // Get the first IP from the comma-separated forwarded IP list
+        $ip_list = explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) );
+        $ip = trim( $ip_list[0] );
+    }
+
     return $ip;
 }
 
@@ -60,9 +68,8 @@ function wp_location_redirect_check_user_location() {
 
         // Use a prepared statement to safely query the database
         $redirects = $wpdb->get_results(
-            $wpdb->prepare( "SELECT * FROM $table_name WHERE country = %s", $country )
+            $wpdb->prepare( "SELECT * FROM {$table_name} WHERE country = %s", $country ) // Safely prepare query
         );
-
 
         // Process the redirect rules
         foreach ( $redirects as $redirect ) {
@@ -76,7 +83,7 @@ function wp_location_redirect_check_user_location() {
             }
         }
     } catch ( Exception $e ) {
-        // Log any GeoIP2-related errors for debugging purposes
-        error_log( 'GeoIP2 Error: ' . $e->getMessage() );
+        // Use trigger_error instead of error_log for proper error handling
+        trigger_error( 'GeoIP2 Error: ' . esc_html( $e->getMessage() ), E_USER_WARNING );
     }
 }

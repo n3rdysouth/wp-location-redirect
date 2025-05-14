@@ -24,7 +24,7 @@ function wp_location_redirect_get_geoip_data( $ip = null ) {
 
     // Check if the GeoLite2 database exists
     if ( ! file_exists( $geoip_file ) ) {
-        error_log( 'GeoLite2 database not found at: ' . $geoip_file );
+        trigger_error( 'GeoLite2 database not found at: ' . esc_html( $geoip_file ), E_USER_WARNING );
         return false;
     }
 
@@ -40,7 +40,7 @@ function wp_location_redirect_get_geoip_data( $ip = null ) {
 
         // Return structured location data
         return array(
-            'ip'       => $ip,
+            'ip'       => sanitize_text_field( $ip ),
             'country'  => $record->country->isoCode ?? '', // Example: 'US'
             'state'    => $record->mostSpecificSubdivision->isoCode ?? '', // Example: 'CA'
             'city'     => $record->city->name ?? '', // Example: 'Los Angeles'
@@ -50,7 +50,7 @@ function wp_location_redirect_get_geoip_data( $ip = null ) {
 
     } catch ( Exception $e ) {
         // Log any errors for debugging
-        error_log( 'GeoIP2 Error: ' . $e->getMessage() );
+        trigger_error( 'GeoIP2 Error: ' . esc_html( $e->getMessage() ), E_USER_WARNING );
         return false;
     }
 }
@@ -61,13 +61,20 @@ function wp_location_redirect_get_geoip_data( $ip = null ) {
  * @return string The client IP address.
  */
 function wp_location_redirect_get_client_ip() {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+    $ip = '';
+
+    // Verify and sanitize each superglobal before use
+    if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+        $ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+    }
+
+    if ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+        $ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
+    } elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
         // Get the first IP from the comma-separated forwarded IP list
-        $ip_list = explode( ',', $_SERVER['HTTP_X_FORWARDED_FOR'] );
+        $ip_list = explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) );
         $ip = trim( $ip_list[0] );
     }
+
     return $ip;
 }

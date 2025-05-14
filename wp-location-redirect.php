@@ -5,6 +5,7 @@ Plugin URI: https://yourwebsite.com/wp-location-redirect
 Description: Redirect users based on their location, such as country, state, and city, using the GeoLite2-City database.
 Version: 1.0.0
 Requires at least: 5.6
+Tested up to: 6.8.1
 Requires PHP: 7.0
 Author: Brandon DuBois
 Author URI: https://www.nerdysouthinc.com

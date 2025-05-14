@@ -36,8 +36,8 @@ function wp_location_redirect_add_main_menu() {
 function wp_location_redirect_settings_page() {
     $geoip_file = WP_LOCATION_REDIRECT_DIR . 'data/GeoLite2-City.mmdb';
     $last_updated = file_exists( $geoip_file )
-        ? date( "F d, Y H:i:s", filemtime( $geoip_file ) )
-        : '<span style="color: red;">Never</span>';
+        ? gmdate( "F d, Y H:i:s", filemtime( $geoip_file ) )
+        : 'Never';
 
     ?>
     <div class="wrap">
@@ -46,7 +46,7 @@ function wp_location_redirect_settings_page() {
         <!-- MMDB File Upload Section -->
         <h2>Upload GeoLite2-City.mmdb File</h2>
         <p>If you have a GeoLite2-City `.mmdb` file, please upload it here. We recommend obtaining it directly from <a href="https://www.maxmind.com/" target="_blank">MaxMind</a>.</p>
-        <p>Last Updated: <strong><?php echo $last_updated; ?></strong></p>
+        <p>Last Updated: <strong><?php echo esc_html( $last_updated ); ?></strong></p>
 
         <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
             <?php wp_nonce_field( 'wp_location_geoip_upload', '_wpnonce_geoip_upload' ); ?>
@@ -81,35 +81,44 @@ function wp_location_redirect_upload_geoip() {
         wp_die( 'Unauthorized!', 'Error', array( 'response' => 401 ) );
     }
 
-    $upload_dir = WP_LOCATION_REDIRECT_DIR . 'data/';
-
-    // Check if a file was uploaded
+    // Validate and process the uploaded file
     if ( isset( $_FILES['geoip_file'] ) && ! empty( $_FILES['geoip_file']['tmp_name'] ) ) {
-        // Validate file type
-        $file_type = wp_check_filetype( $_FILES['geoip_file']['name'] );
+        $uploaded_file = $_FILES['geoip_file'];
+
+        // Check the file type (allow only `.mmdb` extensions)
+        $file_name = sanitize_file_name( wp_unslash( $uploaded_file['name'] ) );
+        $file_type = wp_check_filetype( $file_name );
+
         if ( $file_type['ext'] !== 'mmdb' ) {
             wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
-            exit();
+            exit;
         }
 
-        // Make sure the data directory exists
-        if ( ! is_dir( $upload_dir ) ) {
-            wp_mkdir_p( $upload_dir );
+        global $wp_filesystem;
+
+        // Initialize the WP Filesystem API
+        if ( ! WP_Filesystem() ) {
+            wp_die( esc_html__( 'Failed to initialize WP_Filesystem', 'text-domain' ) );
         }
 
-        // Move the file to the data directory
-        $destination = $upload_dir . 'GeoLite2-City.mmdb';
-        if ( move_uploaded_file( $_FILES['geoip_file']['tmp_name'], $destination ) ) {
-            wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_uploaded=true' ) );
-        } else {
+        $upload_dir = WP_LOCATION_REDIRECT_DIR . 'data/';
+        if ( ! $wp_filesystem->is_dir( $upload_dir ) ) {
+            $wp_filesystem->mkdir( $upload_dir );
+        }
+
+        $destination = trailingslashit( $upload_dir ) . 'GeoLite2-City.mmdb';
+
+        if ( ! $wp_filesystem->move( $uploaded_file['tmp_name'], $destination, true ) ) {
             wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+            exit;
         }
-    } else {
-        // No file uploaded or invalid
-        wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+
+        wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_uploaded=true' ) );
+        exit;
     }
 
-    exit();
+    wp_redirect( admin_url( 'admin.php?page=wp-location-redirect&geoip_error=true' ) );
+    exit;
 }
 
 // MANAGE LOCATIONS PAGE
@@ -120,12 +129,14 @@ function wp_location_redirect_manage_locations_page() {
     $table_name = wp_location_redirect_get_table_name();
 
     // Handle CRUD actions
-    if ( isset( $_POST['action'] ) && $_POST['action'] === 'create' ) {
-        $name         = sanitize_text_field( $_POST['location_name'] );
-        $country      = sanitize_text_field( $_POST['country'] );
-        $state        = sanitize_text_field( $_POST['state'] ); // Optional state
-        $city         = sanitize_text_field( $_POST['city'] );  // Optional city
-        $redirect_url = esc_url_raw( $_POST['redirect_url'] );
+    if ( isset( $_POST['action'], $_POST['_wpnonce'] ) && sanitize_text_field( $_POST['action'] ) === 'create' ) {
+        check_admin_referer( 'create_location', '_wpnonce' );
+
+        $name         = sanitize_text_field( wp_unslash( $_POST['location_name'] ) );
+        $country      = sanitize_text_field( wp_unslash( $_POST['country'] ) );
+        $state        = sanitize_text_field( wp_unslash( $_POST['state'] ) );
+        $city         = sanitize_text_field( wp_unslash( $_POST['city'] ) );
+        $redirect_url = esc_url_raw( wp_unslash( $_POST['redirect_url'] ) );
 
         if ( ! empty( $name ) && ! empty( $country ) && ! empty( $redirect_url ) ) {
             wp_location_redirect_create_location( [
@@ -136,9 +147,14 @@ function wp_location_redirect_manage_locations_page() {
                 'url'           => $redirect_url,
             ] );
         }
-    } elseif ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' ) {
-        $id = intval( $_GET['id'] );
-        wp_location_redirect_delete_location( $id );
+    } elseif ( isset( $_GET['action'], $_GET['_wpnonce'], $_GET['id'] ) && sanitize_text_field( $_GET['action'] ) === 'delete' ) {
+        $id = absint( $_GET['id'] );
+
+        if ( wp_verify_nonce( $_GET['_wpnonce'], 'delete_location_' . $id ) ) {
+            wp_location_redirect_delete_location( $id );
+        } else {
+            wp_die( esc_html__( 'Nonce verification failed.', 'text-domain' ) );
+        }
     }
 
     $locations = wp_location_redirect_get_locations();
@@ -150,6 +166,7 @@ function wp_location_redirect_manage_locations_page() {
         <!-- Add New Location Form -->
         <h2>Add New Location</h2>
         <form method="post" action="">
+            <?php wp_nonce_field( 'create_location', '_wpnonce' ); ?>
             <input type="hidden" name="action" value="create">
             <table class="form-table">
                 <tr>
@@ -187,7 +204,7 @@ function wp_location_redirect_manage_locations_page() {
                 <th>State</th>
                 <th>City</th>
                 <th>Redirect URL</th>
-                <th>Action</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -199,9 +216,9 @@ function wp_location_redirect_manage_locations_page() {
                         <td><?php echo esc_html( $location->country ); ?></td>
                         <td><?php echo esc_html( $location->state ); ?></td>
                         <td><?php echo esc_html( $location->city ); ?></td>
-                        <td><a href="<?php echo esc_url( $location->url ); ?>" target="_blank"><?php echo esc_url( $location->url ); ?></a></td>
+                        <td><a href="<?php echo esc_url( $location->url ); ?>" target="_blank"><?php echo esc_html( $location->url ); ?></a></td>
                         <td>
-                            <a href="<?php echo esc_url( add_query_arg( [ 'action' => 'delete', 'id' => $location->id ] ) ); ?>" class="button button-danger" onclick="return confirm('Are you sure you want to delete this location?')">Delete</a>
+                            <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'delete', 'id' => $location->id ], admin_url( 'admin.php?page=manage-locations' ) ), 'delete_location_' . $location->id ) ); ?>" class="button button-danger" onclick="return confirm('Are you sure you want to delete this location?')">Delete</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
