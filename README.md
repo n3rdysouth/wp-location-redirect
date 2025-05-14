@@ -1,43 +1,62 @@
 # WP Location Redirect
-WP Location Redirect is a powerful WordPress plugin that enables you to redirect users to a specific URL based on their geographical location. Whether it's by country, state/region, or city, this plugin utilizes the GeoIP2-City database to accurately determine where your visitors are coming from.
 
-## Configuration
-I have included a copy of a recent GeoIP2-City database. There is a button to download the latest version of the GeoIP2-City database in order to keep this up to date. For an easier download, we rely on getting this file from [https://cdn.jsdelivr.net/npm/geolite2-city/GeoLite2-City.mmdb.gz](https://cdn.jsdelivr.net/npm/geolite2-city/GeoLite2-City.mmdb.gz).
+WP Location Redirect is a powerful WordPress plugin that enables you to redirect users to a specific URL based on their geographical location. Whether by country, state/region, or city, this plugin utilizes the [GeoIP2-City database](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) to accurately determine where your visitors are coming from.
 
-## Added Functions
-This plugin adds the following functions that you can use in your PHP code:
+## Description
 
-### Save New Redirect Rule
-```php
-wp_location_redirect_save_rule( array(
-    'country' => 'US',
-    'state'   => 'FL',
-    'city'    => 'Miami',
-    'url'     => 'https://example.com/miami/'
-) );
-```
-### Fetch All Rules
+With WP Location Redirect, you can easily set up location-based redirection rules for your users. It's a lightweight and reliable solution for tailoring content delivery based on user location. The plugin includes:
 
-```php
-$rules = wp_location_redirect_get_rules();
-foreach ( $rules as $rule ) {
-    echo "Rule {$rule->id}: Redirect users in {$rule->country}, {$rule->state}, {$rule->city} to {$rule->url}.<br>";
-}
-```
+* **Country-Level Redirects**: Redirect users based on country codes.
+* **State/Region-Level Redirects**: Redirect users if states or regions are relevant.
+* **City-Level Redirects**: Refine redirects further for specific cities.
+* **User-Friendly Management**: Add and delete location rules in the WordPress admin interface.
+* **GeoIP2 Integration**: Built-in support for MaxMind’s GeoIP2 database for accurate location detection.
+* Automated database updates ensure you always remain up-to-date.
 
-## Plugin Details
+## Frequently Asked Questions
 
-### Plugin Information
-| **Field**          | **Value**          |
-|--------------------|--------------------|
-| **Requires at least**: | 5.0 |
-| **Tested up to**:      | 6.4 |
-| **Requires PHP**:      | 7.4 |
-| **Stable tag**:        | 1.0.0 |
-| **License**:           | GPLv2 or later |
-| **License URL**:       | [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html) |
+### Q: What are the system requirements?
+**A:** WordPress version 5.6 or higher, PHP version 7.0 or higher.
 
-### Description
-This plugin is released under the GPLv2 or later license. It allows you to freely use, distribute, and modify the plugin under the same license terms.
+### Q: How do I update the GeoIP2 database?
+**A:** You can update the GeoIP2-City.mmdb database by using the provided upload button in the plugin settings.
 
-The full license can be viewed here: [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html).
+### Q: Is the plugin GDPR compliant?
+**A:** Yes, the MaxMind GeoIP2 database does not store personally identifiable information.
+
+## Changelog
+
+### 1.0.0 - 2023-10-01
+* Initial release.
+* Feature: Country-level redirection.
+* Feature: State/Region and City-level redirection.
+* Feature: Admin interface to manage redirection rules.
+
+## Upgrade Notice
+
+### 1.0.0
+This is the first release of WP Location Redirect.
+
+## Tags
+
+`geoip`, `geoip redirection`, `location redirects`, `country redirects`, `city redirects`
+
+## Requires at least
+
+`5.6`
+
+## Tested up to
+
+`6.8.1`
+
+## Requires PHP
+
+`7.4`
+
+## Stable tag
+
+`1.0.0`
+
+## License
+
+This plugin is licensed under the terms of the GNU General Public License v2.0 or later. You are free to use, modify, and redistribute it under the same license terms. For more details on the license, visit [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html).
