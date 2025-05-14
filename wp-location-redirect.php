@@ -1,7 +1,6 @@
 <?php
 /*
-Plugin Name: WP Location Redirect
-Plugin URI: https://yourwebsite.com/wp-location-redirect
+Plugin Name: Location Redirect WP
 Description: Redirect users based on their location, such as country, state, and city, using the GeoLite2-City database.
 Version: 1.0.0
 Requires at least: 5.6

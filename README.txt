@@ -1,4 +1,4 @@
-=== WP Location Redirect ===
+=== Location Redirect WP ===
 Tags: geoip, geoip redirection, location redirects, country redirects, city redirects
 Requires at least: 5.6
 Tested up to: 6.8
